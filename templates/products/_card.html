@@ -1,0 +1,39 @@
+{% load shop_extras %}
+<article class="product-card">
+  <a href="{% url 'products:detail' product.pk %}">
+    <div class="product-photo">
+      {% if product.image %}<img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy" decoding="async" width="480" height="600">{% endif %}
+    </div>
+    <p class="product-cat">{{ product.category }}</p>
+    <h3>{{ product.name }}</h3>
+    <p class="price">
+      {% if member_discount_rate and member_discount_rate < 1 %}
+        <span class="price-old">¥{{ product.price }}</span>
+        ¥{{ product.price|member_price:member_discount_rate }}
+      {% else %}
+        ¥{{ product.price }}
+      {% endif %}
+    </p>
+    {% if product.stock == 0 %}
+      <p class="stock stock-out">售罄</p>
+    {% elif product.stock <= 8 %}
+      <p class="stock stock-low">紧张</p>
+    {% else %}
+      <p class="stock">充足</p>
+    {% endif %}
+  </a>
+  {% if show_actions and product.stock > 0 %}
+    <div class="product-actions">
+      <form method="post" action="{% url 'products:add_cart' product.pk %}">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <button class="btn-text" type="submit">加入购物车</button>
+      </form>
+      <form method="post" action="{% url 'products:add_cart' product.pk %}">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{% url 'orders:checkout' %}">
+        <button class="btn-text" type="submit">立即购买</button>
+      </form>
+    </div>
+  {% endif %}
+</article>

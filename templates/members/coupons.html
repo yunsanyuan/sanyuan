@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}优惠券 · 花间集{% endblock %}
+{% block content %}
+<h1>优惠券</h1>
+<h2 class="section-title">可领取</h2>
+{% for c in available %}
+  <div class="card coupon-row">
+    <div class="coupon-face">
+      <strong>{{ c.benefit_label }}</strong>
+      <span>{{ c.get_kind_display }}</span>
+    </div>
+    <div class="coupon-body">
+      <strong>{{ c.name }}</strong>
+      <p class="muted">{{ c.description }} · 满 ¥{{ c.min_amount }} 可用 · 剩余 {{ c.remaining }} 张</p>
+    </div>
+    <form method="post" action="{% url 'members:claim' c.pk %}">
+      {% csrf_token %}
+      <button class="btn" type="submit">领取</button>
+    </form>
+  </div>
+{% empty %}
+  <div class="empty muted">暂无可领优惠券</div>
+{% endfor %}
+<h2 class="section-title">我的券</h2>
+{% for c in mine %}
+  <div class="card coupon-row">
+    <div class="coupon-face">
+      <strong>{{ c.coupon.benefit_label }}</strong>
+      <span>{{ c.coupon.get_kind_display }}</span>
+    </div>
+    <div class="coupon-body">
+      <strong>{{ c.coupon.name }}</strong>
+      <p class="muted">有效期至 {{ c.expire_at|date:"Y-m-d" }}</p>
+    </div>
+    <span class="badge badge-{{ c.status }}" style="align-self:center;margin-right:16px">{{ c.get_status_display }}</span>
+  </div>
+{% empty %}
+  <div class="empty muted">还没有券</div>
+{% endfor %}
+{% endblock %}

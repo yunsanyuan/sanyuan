@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% load shop_extras %}
+{% block title %}{{ product.name }} · 花间集{% endblock %}
+{% block content %}
+<article class="detail">
+  <div class="thumb large">{% if product.image %}<img src="{{ product.image.url }}" alt="{{ product.name }}" decoding="async">{% else %}<span>花</span>{% endif %}</div>
+  <div class="detail-info">
+    <p class="muted">{{ product.category }} · {{ product.sku }}</p>
+    <h1>{{ product.name }}</h1>
+    {% if product.flower_language %}
+      <blockquote class="flower-language">
+        <p class="eyebrow">花语</p>
+        <p>{{ product.flower_language }}</p>
+      </blockquote>
+    {% endif %}
+    <p class="price">
+      {% if member_discount_rate and member_discount_rate < 1 %}
+        <span class="price-old">¥{{ product.price }}</span>
+        ¥{{ product.price|member_price:member_discount_rate }}
+        <span class="muted">/ {{ product.unit }}</span>
+        <span class="price-tag">{{ welcome.level_name }}价</span>
+      {% else %}
+        ¥{{ product.price }} <span class="muted">/ {{ product.unit }}</span>
+      {% endif %}
+    </p>
+    <p>{{ product.description|default:"精选时令鲜花，适合日常与纪念日。" }}</p>
+    {% if product.stock == 0 %}
+      <p class="stock stock-out">售罄</p>
+    {% elif product.stock <= 8 %}
+      <p class="stock stock-low">库存紧张</p>
+    {% else %}
+      <p class="muted">库存充足</p>
+    {% endif %}
+    {% if product.stock > 0 %}
+      <form method="post" action="{% url 'products:add_cart' product.pk %}">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <div class="qty-row">
+          <label>数量<input type="number" name="quantity" min="1" max="99" value="1"></label>
+          <button class="btn" type="submit">加入购物车</button>
+          <button class="btn btn-outline" type="submit" name="next" value="{% url 'orders:checkout' %}">立即购买</button>
+        </div>
+      </form>
+    {% endif %}
+  </div>
+</article>
+{% if related %}
+<header class="section-head">
+  <h2>同分类</h2>
+</header>
+<div class="product-grid">
+  {% for p in related %}
+    {% include "products/_card.html" with product=p show_actions=False %}
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

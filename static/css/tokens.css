@@ -1,0 +1,28 @@
+:root {
+  --brand: #355e4b;
+  --brand-deep: #2a4a3c;
+  --brand-soft: #e7eeea;
+  --bg: #f3f1ed;
+  --surface: #ffffff;
+  --text: #2c2b28;
+  --muted: #6f6c67;
+  --placeholder: #a39f98;
+  --border: #e3dfd6;
+  --success: #355e4b;
+  --warning: #8a7354;
+  --danger: #8e5a52;
+  --overlay: rgba(42, 74, 60, 0.08);
+  --shadow: 0 1px 0 rgba(44, 43, 40, 0.04);
+  --radius: 8px;
+  --radius-sm: 4px;
+  --page: 1120px;
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 32px;
+  --space-6: 48px;
+  --space-8: 64px;
+  --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --control-h: 36px;
+  --input-h: 40px;
+}

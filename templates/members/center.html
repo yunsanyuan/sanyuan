@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}会员中心 · 花间集{% endblock %}
+{% block body_class %}member-stage {{ welcome.badge_class }}{% endblock %}
+{% block content %}
+<p class="preview-note" data-preview-banner data-mine="{{ actual_welcome.level_code }}" {% if not previewing %}hidden{% endif %}>
+  预览中 · 实际仍为 {{ actual_welcome.level_name }}
+  <a href="{% url 'members:center' %}" data-preview="{{ actual_welcome.level_code }}" data-mine="{{ actual_welcome.level_code }}">返回</a>
+</p>
+<nav class="level-tabs" aria-label="会员等级预览">
+  {% for lv in levels %}
+    <a class="level-tab {{ lv.badge_class }} {% if selected_level and lv.code == selected_level.code %}is-on{% endif %}"
+       data-preview="{{ lv.code }}"
+       data-mine="{{ actual_welcome.level_code }}"
+       href="{% if lv.is_mine %}{% url 'members:center' %}{% else %}{% url 'members:center' %}?preview={{ lv.code }}{% endif %}">
+      {{ lv.name }}{% if lv.is_mine %}<em>当前</em>{% endif %}
+    </a>
+  {% endfor %}
+</nav>
+{% for lv in levels %}
+  <div class="level-pane" data-level-pane="{{ lv.code }}" {% if not selected_level or selected_level.code != lv.code %}hidden{% endif %}>
+    <section class="pass {{ lv.badge_class }}">
+      <p class="pass-kicker">花间集 · {{ lv.tagline }}</p>
+      <h1>{{ lv.name }}会员</h1>
+      <p class="pass-perk">{{ lv.perk }}</p>
+      {% if lv.is_mine and actual_welcome.progress %}
+        {% if actual_welcome.progress.is_top %}
+          <p class="muted">已是最高礼遇</p>
+        {% else %}
+          <div class="level-bar" aria-label="升级进度"><span style="width: {{ actual_welcome.progress.percent }}%"></span></div>
+          <p class="muted">再累计 {{ actual_welcome.progress.need_points }} 积分可升 {{ actual_welcome.progress.next_name }}</p>
+        {% endif %}
+      {% elif not lv.reached %}
+        <div class="level-bar" aria-label="距该等级"><span style="width: {{ lv.gap_percent }}%"></span></div>
+        <p class="muted">再累计 {{ lv.need_points }} 积分可至{{ lv.name }}</p>
+      {% endif %}
+    </section>
+    <section class="pass-meta">
+      <div>
+        <p class="eyebrow">礼遇</p>
+        <ul class="quiet-list">
+          {% for line in lv.privileges %}
+            <li>{{ line }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      <div>
+        <p class="eyebrow">试算</p>
+        {% if sample_product %}
+          <p class="quote-name">{{ sample_product.name }}</p>
+          <p class="muted">原价 ¥{{ sample_product.price }}</p>
+          <p class="price">¥{{ lv.sample_price }}</p>
+          <p class="muted">{{ lv.zhe }}</p>
+        {% else %}
+          <p class="muted">暂无可试算花品</p>
+        {% endif %}
+      </div>
+    </section>
+  </div>
+{% endfor %}
+<div class="stats">
+  <div class="card"><p class="muted">实际等级</p><strong>{{ member.level }}</strong></div>
+  <a class="card" href="{% url 'members:ledger' %}">
+    <p class="muted">当前积分</p><strong>{{ member.current_points }}</strong>
+  </a>
+  <a class="card" href="{% url 'members:ledger' %}">
+    <p class="muted">累计积分</p><strong>{{ member.total_points }}</strong>
+  </a>
+  <a class="card" href="{% url 'members:ledger' %}">
+    <p class="muted">储值余额</p><strong>¥{{ member.store_balance }}</strong>
+  </a>
+</div>
+<p class="page-actions">
+  <a class="btn" href="{% url 'products:list' %}">去选花</a>
+  <a class="btn btn-outline" href="{% url 'members:coupons' %}">优惠券</a>
+  <a class="btn btn-ghost" href="{% url 'members:profile' %}">修改资料</a>
+  <a class="btn btn-ghost" href="{% url 'accounts:password_change' %}">修改密码</a>
+  <a class="btn btn-ghost" href="{% url 'members:ledger' %}">积分与储值</a>
+  <a class="btn btn-ghost" href="{% url 'members:recharge' %}">储值充值</a>
+  <a class="btn btn-ghost" href="{% url 'orders:list' %}">全部订单</a>
+</p>
+<div class="split">
+  <section class="card panel">
+    <h2 class="section-title">最近订单</h2>
+    {% for o in orders %}
+      <div class="order-line">
+        <div>
+          <a href="{% url 'orders:detail' o.pk %}">{{ o.order_no }}</a>
+          <p class="muted">{% for item in o.items.all %}{{ item.product_name }}{% if not forloop.last %}、{% endif %}{% endfor %}</p>
+        </div>
+        <span><span class="badge badge-{{ o.status }}">{{ o.get_status_display }}</span> ¥{{ o.payable_amount }}</span>
+      </div>
+    {% empty %}
+      <p class="muted">暂无订单</p>
+    {% endfor %}
+  </section>
+  <section class="card panel">
+    <h2 class="section-title">优惠券 <a href="{% url 'members:coupons' %}">领取</a></h2>
+    {% for c in coupons %}
+      <div class="order-line">
+        <span>{{ c.coupon.name }}</span>
+        <span class="badge badge-{{ c.status }}">{{ c.get_status_display }}</span>
+      </div>
+    {% empty %}
+      <p class="muted">暂无优惠券，去<a href="{% url 'members:coupons' %}">领取</a></p>
+    {% endfor %}
+  </section>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/member-preview.js' %}?v=20261007c"></script>
+{% endblock %}

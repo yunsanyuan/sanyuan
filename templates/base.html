@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}花间集{% endblock %}</title>
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'css/tokens.css' %}?v=20261007h">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}?v=20261007h">
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  <header class="site-header">
+    <div class="container">
+      <a class="brand" href="{% url 'home' %}"><span class="brand-mark">花</span>花间集</a>
+      <nav>
+        <a class="{% if request.resolver_match.url_name == 'home' %}is-on{% endif %}" href="{% url 'home' %}">首页</a>
+        <a class="{% if nav == 'products' %}is-on{% endif %}" href="{% url 'products:list' %}">花市</a>
+        {% if user.is_authenticated and user.role == "member" %}
+          <a class="cart-link {% if nav == 'orders' and request.resolver_match.url_name == 'cart' %}is-on{% endif %}" href="{% url 'orders:cart' %}">
+            购物车{% if cart_count %}<span class="cart-badge">{{ cart_count }}</span>{% endif %}
+          </a>
+          <a class="{% if nav == 'orders' and request.resolver_match.url_name != 'cart' %}is-on{% endif %}" href="{% url 'orders:list' %}">订单</a>
+          <a class="{% if nav == 'members' %}is-on{% endif %}" href="{% url 'members:center' %}">会员中心</a>
+          <form class="nav-form" method="post" action="{% url 'accounts:logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="link-btn">退出</button>
+          </form>
+        {% elif user.is_staff %}
+          <a class="{% if nav == 'dashboard' %}is-on{% endif %}" href="{% url 'dashboard:index' %}">经营看板</a>
+          <a href="/admin/">管理后台</a>
+        {% else %}
+          <a class="{% if request.resolver_match.url_name == 'login' %}is-on{% endif %}" href="{% url 'accounts:login' %}">登录</a>
+          <a class="{% if request.resolver_match.url_name == 'register' %}is-on{% endif %}" href="{% url 'accounts:register' %}">注册</a>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+  <main class="container">
+    {% if messages %}
+      {% for message in messages %}
+        <div class="flash flash-{{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="site-footer">
+    <div class="container muted">花间集 · {{ shop_slogan }} · 模拟支付，不接入真实网关</div>
+  </footer>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

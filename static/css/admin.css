@@ -1,0 +1,71 @@
+:root {
+  --flower-brand: #355e4b;
+  --flower-deep: #2a4a3c;
+  --flower-soft: #e7eeea;
+  --flower-bg: #f3f1ed;
+  --flower-border: #e3dfd6;
+}
+
+.accent-success .btn-primary,
+.btn-success,
+.bg-success,
+.navbar-success {
+  background-color: var(--flower-brand) !important;
+  border-color: var(--flower-brand) !important;
+}
+
+.sidebar-dark-success .nav-sidebar > .nav-item > .nav-link.active {
+  background-color: var(--flower-brand) !important;
+}
+
+.login-logo a,
+.brand-link,
+.text-success {
+  color: var(--flower-brand) !important;
+}
+
+a.nav-link {
+  color: inherit;
+}
+
+.content-wrapper {
+  background-color: var(--flower-bg);
+}
+
+.card {
+  border: 1px solid var(--flower-border);
+  box-shadow: none;
+}
+
+.login-page {
+  background:
+    linear-gradient(105deg, rgba(243, 241, 237, 0.88), rgba(243, 241, 237, 0.42)),
+    url("/static/img/hero.jpg") center/cover no-repeat !important;
+}
+
+.login-card-body {
+  border-radius: 8px;
+}
+
+.login-box .card {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.actions select,
+.actions select.select2-hidden-accessible {
+  display: inline-block !important;
+  position: static !important;
+  width: auto !important;
+  min-width: 280px !important;
+  height: 38px !important;
+  margin: 0 8px 0 0 !important;
+  overflow: visible !important;
+  clip: auto !important;
+  clip-path: none !important;
+  opacity: 1 !important;
+}
+
+.actions .select2-container {
+  display: none !important;
+}

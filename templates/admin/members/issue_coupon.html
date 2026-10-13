@@ -1,0 +1,31 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<h1>{{ title }}</h1>
+<p>将发放给：</p>
+<ul>
+  {% for m in members %}
+    <li>{{ m }}（{{ m.user.username }} · {{ m.level }}）</li>
+  {% endfor %}
+</ul>
+<form method="post">
+  {% csrf_token %}
+  {% for m in members %}
+    <input type="hidden" name="_selected_action" value="{{ m.pk }}">
+  {% endfor %}
+  <input type="hidden" name="action" value="action_issue_coupon">
+  <input type="hidden" name="index" value="0">
+  <input type="hidden" name="post" value="yes">
+  <label>选择优惠券
+    <select name="coupon_id" required>
+      <option value="">请选择</option>
+      {% for c in coupons %}
+        <option value="{{ c.pk }}">{{ c.name }}（剩余 {{ c.remaining }}）</option>
+      {% endfor %}
+    </select>
+  </label>
+  <p style="margin-top:16px">
+    <button type="submit" class="btn btn-success">确认发放</button>
+    <a class="btn btn-outline-secondary" href="../">返回</a>
+  </p>
+</form>
+{% endblock %}

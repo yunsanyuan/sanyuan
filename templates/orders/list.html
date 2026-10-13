@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}我的订单 · 花间集{% endblock %}
+{% block content %}
+<h1>我的订单</h1>
+{% if orders %}
+<div class="table-wrap">
+<table class="table">
+  <thead><tr><th>订单</th><th>状态</th><th>应付</th><th>时间</th></tr></thead>
+  <tbody>
+  {% for o in orders %}
+    <tr>
+      <td>
+        <a href="{% url 'orders:detail' o.pk %}">{{ o.order_no }}</a>
+        <p class="muted">{% for item in o.items.all %}{{ item.product_name }} × {{ item.quantity }}{% if not forloop.last %}、{% endif %}{% endfor %}</p>
+      </td>
+      <td><span class="badge badge-{{ o.status }}">{{ o.get_status_display }}</span></td>
+      <td class="price">¥{{ o.payable_amount }}</td>
+      <td class="muted">{{ o.created_at|date:"Y-m-d H:i" }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<div class="empty muted">还没有订单。<a href="{% url 'products:list' %}">去选花</a></div>
+{% endif %}
+{% endblock %}

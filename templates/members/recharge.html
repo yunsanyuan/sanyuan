@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}储值充值 · 花间集{% endblock %}
+{% block content %}
+<header class="shop-head">
+  <div>
+    <h1>储值充值</h1>
+    <p class="muted">模拟网关入账，不赠积分。单笔不超过 ¥{{ max_amount }}。</p>
+  </div>
+  <a class="btn btn-ghost" href="{% url 'members:ledger' %}">返回流水</a>
+</header>
+<div class="stats">
+  <div class="card"><p class="muted">当前余额</p><strong>¥{{ member.store_balance }}</strong></div>
+</div>
+<section class="card profile-card">
+  {% if pending %}
+    <h2 class="section-title">待入账 {{ pending.recharge_no }}</h2>
+    <p>金额 <strong>¥{{ pending.amount }}</strong></p>
+    {% if expire_at %}
+      <p class="muted">请于 {{ expire_at|date:"H:i" }} 前完成，超时将关闭且不入账。</p>
+    {% endif %}
+    <div class="page-actions">
+      <form method="post" action="{% url 'members:recharge_pay' pending.pk %}">
+        {% csrf_token %}
+        <input type="hidden" name="success" value="1">
+        <button class="btn" type="submit">模拟支付成功</button>
+      </form>
+      <form method="post" action="{% url 'members:recharge_pay' pending.pk %}">
+        {% csrf_token %}
+        <input type="hidden" name="success" value="0">
+        <button class="btn btn-outline" type="submit">模拟支付失败</button>
+      </form>
+    </div>
+  {% else %}
+    <form method="post">
+      {% csrf_token %}
+      <p class="eyebrow">选择金额</p>
+      <div class="page-actions">
+        {% for p in presets %}
+          <button class="btn btn-outline" type="submit" name="preset" value="{{ p }}">¥{{ p }}</button>
+        {% endfor %}
+      </div>
+      <label>自定义金额<input type="number" name="amount" min="1" max="{{ max_amount }}" step="0.01" placeholder="1–{{ max_amount }}"></label>
+      <button class="btn" type="submit">生成充值单</button>
+    </form>
+  {% endif %}
+</section>
+{% endblock %}

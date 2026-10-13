@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}经营看板 · 花间集{% endblock %}
+{% block content %}
+<h1>经营看板</h1>
+<p class="muted">{{ welcome.home_title }} · 近 14 天销售与会员运营数据</p>
+<section id="desk" class="desk">
+  <div class="card panel">
+    <h2 class="section-title">待支付 <span class="muted">{{ desk.pending_count }} 笔</span></h2>
+    {% for o in desk.pending_orders %}
+      <div class="order-line">
+        <div>
+          <a href="/admin/orders/order/{{ o.pk }}/change/">{{ o.order_no }}</a>
+          <p class="muted">{{ o.member }} · {{ o.created_at|date:"m-d H:i" }}</p>
+        </div>
+        <span>¥{{ o.payable_amount }}</span>
+      </div>
+    {% empty %}
+      <p class="muted">暂无待支付订单</p>
+    {% endfor %}
+  </div>
+  <div class="card panel">
+    <h2 class="section-title">待履约 <span class="muted">{{ desk.fulfill_count }} 笔</span></h2>
+    {% for o in desk.fulfill_orders %}
+      <div class="order-line">
+        <div>
+          <a href="/admin/orders/order/{{ o.pk }}/change/">{{ o.order_no }}</a>
+          <p class="muted">{{ o.get_fulfillment_display }} · {{ o.member }}</p>
+        </div>
+        <span>¥{{ o.payable_amount }}</span>
+      </div>
+    {% empty %}
+      <p class="muted">暂无待发货或待自提</p>
+    {% endfor %}
+  </div>
+  <div class="card panel">
+    <h2 class="section-title">待审核取消 <span class="muted">{{ desk.cancel_review_count }} 笔</span></h2>
+    {% for o in desk.cancel_review_orders %}
+      <div class="order-line">
+        <div>
+          <a href="/admin/orders/order/{{ o.pk }}/change/">{{ o.order_no }}</a>
+          <p class="muted">{{ o.member }} · 同意后退款，驳回继续履约</p>
+        </div>
+        <span>¥{{ o.payable_amount }}</span>
+      </div>
+    {% empty %}
+      <p class="muted">暂无取消申请</p>
+    {% endfor %}
+  </div>
+  <div class="card panel">
+    <h2 class="section-title">低库存 <span class="muted">≤ {{ desk.low_stock_threshold }}</span></h2>
+    {% for p in desk.low_stock %}
+      <div class="order-line">
+        <div>
+          <a href="/admin/products/product/{{ p.pk }}/change/">{{ p.name }}</a>
+          <p class="muted">{{ p.category }} · {{ p.sku }}</p>
+        </div>
+        <span>{{ p.stock }} {{ p.unit }}</span>
+      </div>
+    {% empty %}
+      <p class="muted">暂无低库存花品</p>
+    {% endfor %}
+  </div>
+</section>
+<div class="stats">
+  <div class="card"><p class="muted">今日实收</p><strong>¥{{ kpi.today_sales }}</strong></div>
+  <div class="card"><p class="muted">今日成交单</p><strong>{{ kpi.today_orders }}</strong></div>
+  <div class="card"><p class="muted">会员数</p><strong>{{ kpi.members }}</strong></div>
+  <div class="card"><p class="muted">待支付</p><strong>{{ kpi.pending }}</strong></div>
+  <div class="card"><p class="muted">储值余额合计</p><strong>¥{{ kpi.store_balance }}</strong></div>
+  <div class="card"><p class="muted">已核销优惠券</p><strong>{{ kpi.coupon_used }}</strong></div>
+</div>
+<div class="chart-grid">
+  <div class="card"><div id="chart-sales" class="chart"></div></div>
+  <div class="card"><div id="chart-status" class="chart"></div></div>
+  <div class="card"><div id="chart-members" class="chart"></div></div>
+  <div class="card"><div id="chart-levels" class="chart"></div></div>
+  <div class="card"><div id="chart-hot" class="chart"></div></div>
+  <div class="card"><div id="chart-equity" class="chart"></div></div>
+</div>
+{{ payload|json_script:"dashboard-data" }}
+<script src="{% static 'vendor/echarts.min.js' %}"></script>
+<script>
+  const data = JSON.parse(document.getElementById("dashboard-data").textContent);
+  const brand = data.brand;
+  const axis = { axisLine: { lineStyle: { color: "#e3dfd6" } }, axisLabel: { color: "#6f6c67" }, splitLine: { lineStyle: { color: "#f3f1ed" } } };
+  function pie(el, title, list) {
+    echarts.init(el).setOption({
+      title: { text: title, left: 8, textStyle: { fontSize: 14, color: "#2c2b28" } },
+      tooltip: { trigger: "item" },
+      color: [brand, "#6f6c67", "#8a7354", "#8e5a52", "#a39f98", "#c8c3ba"],
+      series: [{ type: "pie", radius: ["36%", "62%"], data: list, label: { color: "#6f6c67" } }]
+    });
+  }
+  echarts.init(document.getElementById("chart-sales")).setOption({
+    title: { text: "销售趋势", left: 8, textStyle: { fontSize: 14 } },
+    tooltip: { trigger: "axis" },
+    legend: { data: ["实收", "订单数"], right: 12 },
+    xAxis: { type: "category", data: data.days, ...axis },
+    yAxis: [{ type: "value", ...axis }, { type: "value", ...axis, splitLine: { show: false } }],
+    series: [
+      { name: "实收", type: "line", smooth: true, data: data.sales, itemStyle: { color: brand }, areaStyle: { color: "rgba(53,94,75,0.08)" } },
+      { name: "订单数", type: "bar", yAxisIndex: 1, data: data.order_counts, itemStyle: { color: "#a39f98" } }
+    ]
+  });
+  pie(document.getElementById("chart-status"), "订单状态", data.order_status);
+  echarts.init(document.getElementById("chart-members")).setOption({
+    title: { text: "会员增长", left: 8, textStyle: { fontSize: 14 } },
+    tooltip: { trigger: "axis" },
+    xAxis: { type: "category", data: data.days, ...axis },
+    yAxis: { type: "value", minInterval: 1, ...axis },
+    series: [{ type: "line", smooth: true, data: data.member_growth, itemStyle: { color: brand } }]
+  });
+  pie(document.getElementById("chart-levels"), "等级分布", data.levels);
+  echarts.init(document.getElementById("chart-hot")).setOption({
+    title: { text: "畅销商品", left: 8, textStyle: { fontSize: 14 } },
+    tooltip: { trigger: "axis" },
+    xAxis: { type: "category", data: data.bestsellers.names, axisLabel: { interval: 0, color: "#6f6c67" } },
+    yAxis: { type: "value", minInterval: 1, ...axis },
+    series: [{ type: "bar", data: data.bestsellers.qty, itemStyle: { color: brand, borderRadius: [4,4,0,0] } }]
+  });
+  echarts.init(document.getElementById("chart-equity")).setOption({
+    title: { text: "积分 / 储值 / 优惠券", left: 8, textStyle: { fontSize: 14 } },
+    tooltip: { trigger: "axis" },
+    legend: { data: ["积分", "储值", "券张数"], right: 8 },
+    xAxis: { type: "category", data: ["获得/充值/已领", "扣回/消费/已核销", "—/退款回补/过期"], axisLabel: { color: "#6f6c67" } },
+    yAxis: { type: "value", ...axis },
+    series: [
+      { name: "积分", type: "bar", data: [data.points.earn, data.points.refund, 0], itemStyle: { color: brand } },
+      { name: "储值", type: "bar", data: [data.store.recharge, data.store.consume, data.store.refund], itemStyle: { color: "#6f6c67" } },
+      { name: "券张数", type: "bar", data: [data.coupons.claimed, data.coupons.used, data.coupons.expired], itemStyle: { color: "#8a7354" } }
+    ]
+  });
+</script>
+{% endblock %}

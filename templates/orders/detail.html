@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}订单 {{ order.order_no }}{% endblock %}
+{% block content %}
+<h1>{{ order.order_no }} <span class="badge badge-{{ order.status }}">{{ order.get_status_display }}</span></h1>
+<div class="card">
+  {% for item in order.items.all %}
+    <div class="order-line">
+      <div class="cart-item">
+        <div class="thumb">
+          {% if item.product and item.product.image %}
+            <img src="{{ item.product.image.url }}" alt="{{ item.product_name }}">
+          {% else %}
+            <span>花</span>
+          {% endif %}
+        </div>
+        <span>{{ item.product_name }} × {{ item.quantity }}</span>
+      </div>
+      <span>¥{{ item.subtotal }}</span>
+    </div>
+  {% endfor %}
+  <div class="amount-list">
+    <div><span>商品合计</span><span>¥{{ order.goods_amount }}</span></div>
+    <div><span>等级折扣</span><span>−¥{{ order.level_discount_amount }}</span></div>
+    <div><span>优惠券</span><span>−¥{{ order.coupon_amount }}</span></div>
+    <div class="pay"><span>应付</span><span>¥{{ order.payable_amount }}</span></div>
+    <div><span>储值支付</span><span>¥{{ order.store_paid_amount }}</span></div>
+    <div><span>模拟网关</span><span>¥{{ order.gateway_paid_amount }}</span></div>
+    <div><span>发放积分</span><span>{{ order.points_awarded }}</span></div>
+  </div>
+  <div class="amount-list">
+    <div><span>履约</span><span>{{ order.get_fulfillment_display }}</span></div>
+    {% if order.receiver_name %}<div><span>收花人</span><span>{{ order.receiver_name }} {{ order.receiver_phone }}</span></div>{% endif %}
+    {% if order.address %}<div><span>地址</span><span>{{ order.address }}</span></div>{% endif %}
+    {% if order.tracking_no %}<div><span>运单号</span><span>{{ order.tracking_no }}</span></div>{% endif %}
+    {% if order.shipped_at %}<div><span>发货</span><span>{{ order.shipped_at|date:"m-d H:i" }}</span></div>{% endif %}
+    {% if order.received_at %}<div><span>签收</span><span>{{ order.received_at|date:"m-d H:i" }}</span></div>{% endif %}
+  </div>
+  {% if order.status_logs.all %}
+    <p class="muted">状态记录</p>
+    <ul class="quiet-list">
+      {% for log in order.status_logs.all %}
+        <li>{{ log.created_at|date:"m-d H:i" }} {{ log.get_to_status_display|default:log.to_status }}{% if log.remark %} · {{ log.remark }}{% endif %}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+  {% if order.status == "pending" %}
+    {% if expire_at %}
+      <p class="muted">请于 {{ expire_at|date:"H:i" }} 前完成支付，超时将自动取消并回补库存。</p>
+    {% endif %}
+    <div class="page-actions">
+    <form method="post" action="{% url 'orders:pay' order.pk %}">
+      {% csrf_token %}
+      <input type="hidden" name="success" value="1">
+      <button class="btn" type="submit">模拟支付成功</button>
+    </form>
+    <form method="post" action="{% url 'orders:pay' order.pk %}">
+      {% csrf_token %}
+      <input type="hidden" name="success" value="0">
+      <button class="btn btn-outline" type="submit">模拟支付失败</button>
+    </form>
+    <form method="post" action="{% url 'orders:cancel' order.pk %}">
+      {% csrf_token %}
+      <button class="btn btn-ghost" type="submit">取消订单</button>
+    </form>
+    </div>
+  {% elif order.status == "shipped" %}
+    <p class="muted">花已在路上{% if order.tracking_no %}，运单 {{ order.tracking_no }}{% endif %}。确认收到后请签收。</p>
+    <div class="page-actions">
+      <form method="post" action="{% url 'orders:receive' order.pk %}">
+        {% csrf_token %}
+        <button class="btn" type="submit">确认签收</button>
+      </form>
+    </div>
+  {% elif order.status == "cancel_requested" %}
+    <p class="muted">已提交取消申请。审核通过后退回储值与积分，券不退；驳回后继续备花。审核前可撤回。</p>
+    <div class="page-actions">
+      <form method="post" action="{% url 'orders:withdraw_cancel' order.pk %}">
+        {% csrf_token %}
+        <button class="btn btn-outline" type="submit">撤回申请</button>
+      </form>
+    </div>
+  {% elif order.status == "paid" %}
+    {% if order.fulfillment == "delivery" %}
+      <p class="muted">店员备花发货中。已支付后不能改地址。未发货可申请取消，店员或管理员同意后才退款。</p>
+    {% else %}
+      <p class="muted">请到店出示订单号，由店员核销自提。未核销可申请取消，审核通过后才退回储值与积分，券不退。</p>
+    {% endif %}
+    <form class="cancel-request" method="post" action="{% url 'orders:cancel' order.pk %}">
+      {% csrf_token %}
+      <input type="text" name="remark" maxlength="80" placeholder="取消原因（选填），例如改地址请重下">
+      <button class="btn btn-warn" type="submit">申请取消退款</button>
+    </form>
+  {% endif %}
+</div>
+{% endblock %}

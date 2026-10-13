@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}结算 · 花间集{% endblock %}
+{% block content %}
+<h1>确认订单</h1>
+<div class="card">
+  {% for item in items %}
+    <div class="order-line">
+      <div class="cart-item">
+        <div class="thumb">{% if item.product.image %}<img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">{% else %}<span>花</span>{% endif %}</div>
+        <span>{{ item.product.name }} × {{ item.quantity }}</span>
+      </div>
+      <span>¥{{ item.subtotal }}</span>
+    </div>
+  {% endfor %}
+  <div class="amount-list">
+    <div><span>商品合计</span><span>¥{{ goods }}</span></div>
+    <div><span>等级折扣</span><span>−¥{{ discount }}</span></div>
+    <div class="pay"><span>应付（券将在下单时核销）</span><span>¥{{ payable }}</span></div>
+  </div>
+  <p class="muted">储值余额 ¥{{ store_balance }}</p>
+  <form method="post">
+    {% csrf_token %}
+    <p class="eyebrow">履约方式</p>
+    <div class="choice-row">
+      <label><input type="radio" name="fulfillment" value="delivery" checked> 送花上门</label>
+      <label><input type="radio" name="fulfillment" value="pickup"> 到店自提</label>
+    </div>
+    <p class="muted">自提核销由店员完成。已支付后不能改地址，要改请退款重下。</p>
+    <label>收花人<input type="text" name="receiver_name" value="{{ receiver_name }}" placeholder="配送必填"></label>
+    <label>电话<input type="text" name="receiver_phone" value="{{ receiver_phone }}" placeholder="配送必填"></label>
+    <label>地址<input type="text" name="address" value="{{ address }}" placeholder="配送必填，以下单快照为准"></label>
+    <label><input type="checkbox" name="use_store" value="1" checked> 优先使用储值抵扣</label>
+    <label>优惠券
+      <select name="coupon_issue">
+        <option value="auto">自动使用最优券</option>
+        <option value="none">不使用优惠券</option>
+        {% for c in coupons %}
+          <option value="{{ c.pk }}">{{ c.coupon.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <button class="btn" type="submit">提交订单</button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}登录 · 花间集{% endblock %}
+{% block body_class %}auth-page{% endblock %}
+{% block content %}
+<div class="auth-split">
+  <aside class="auth-visual">
+    <p class="eyebrow">花间集</p>
+    <h2 class="auth-slogan">以花为集<br>以客为心</h2>
+    <p>把日常的花，送给认真生活的人。</p>
+  </aside>
+  <section class="auth">
+    <div class="brand-mark">花</div>
+    <h1>欢迎回来</h1>
+    <p class="muted hint">会员登录后即可选花下单</p>
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next }}">
+      {{ form.non_field_errors }}
+      {% for field in form %}
+        <label>{{ field.label }}{{ field }}{{ field.errors }}</label>
+      {% endfor %}
+      <button class="btn btn-block" type="submit">登录</button>
+    </form>
+    <p class="muted hint">没有账号？<a href="{% url 'accounts:register' %}">立即注册</a></p>
+    <p class="muted hint">演示 demo_member / member123456</p>
+  </section>
+</div>
+{% endblock %}

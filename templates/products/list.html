@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}花市 · 花间集{% endblock %}
+{% block content %}
+<header class="shop-head">
+  <div>
+    <h1>花市</h1>
+    <p class="muted">
+      {% if q %}「{{ q }}」· {{ result_count }} 件
+      {% else %}{{ result_count }} 件在售{% endif %}
+    </p>
+  </div>
+  <div class="toolbar">
+    <form class="shop-search" method="get" action="{% url 'products:list' %}">
+      {% if current_cat %}<input type="hidden" name="cat" value="{{ current_cat }}">{% endif %}
+      {% if sort and sort != "default" %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
+      <input type="search" name="q" value="{{ q }}" placeholder="搜花名、花语、SKU" aria-label="搜索花品">
+      <button class="btn btn-ghost" type="submit">搜索</button>
+    </form>
+    <form class="shop-sort" method="get" action="{% url 'products:list' %}">
+      {% if current_cat %}<input type="hidden" name="cat" value="{{ current_cat }}">{% endif %}
+      {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
+      <select name="sort" onchange="this.form.submit()" aria-label="排序">
+        <option value="default" {% if sort == "default" %}selected{% endif %}>默认</option>
+        <option value="price" {% if sort == "price" %}selected{% endif %}>价格从低到高</option>
+        <option value="price_desc" {% if sort == "price_desc" %}selected{% endif %}>价格从高到低</option>
+        <option value="stock" {% if sort == "stock" %}selected{% endif %}>库存</option>
+      </select>
+    </form>
+  </div>
+</header>
+<nav class="chips" aria-label="分类">
+  <a class="{% if not current_cat %}active{% endif %}" href="{% url 'products:list' %}{% if query_all %}?{{ query_all }}{% endif %}">全部</a>
+  {% for c in categories %}
+    <a class="{% if current_cat == c.slug %}active{% endif %}" href="?cat={{ c.slug }}{% if q %}&amp;q={{ q|urlencode }}{% endif %}{% if sort and sort != 'default' %}&amp;sort={{ sort }}{% endif %}">{{ c.name }}</a>
+  {% endfor %}
+</nav>
+{% if products %}
+  <div class="product-grid">
+    {% for p in products %}
+      {% include "products/_card.html" with product=p show_actions=True %}
+    {% endfor %}
+  </div>
+  {% if page_obj.paginator.num_pages > 1 %}
+    <nav class="pager" aria-label="分页">
+      {% if page_obj.has_previous %}
+        <a href="?{% if query %}{{ query }}&amp;{% endif %}page={{ page_obj.previous_page_number }}">上一页</a>
+      {% endif %}
+      <span class="is-on">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+      {% if page_obj.has_next %}
+        <a href="?{% if query %}{{ query }}&amp;{% endif %}page={{ page_obj.next_page_number }}">下一页</a>
+      {% endif %}
+    </nav>
+  {% endif %}
+{% else %}
+  <div class="empty">
+    {% if q %}没有找到「{{ q }}」。{% else %}该分类暂无在售商品。{% endif %}
+    <a href="{% url 'products:list' %}">清除条件</a>
+  </div>
+{% endif %}
+{% endblock %}

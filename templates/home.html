@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}首页 · 花间集{% endblock %}
+{% block content %}
+<section class="hero-split">
+  <div class="hero-copy">
+    <p class="eyebrow">花间集</p>
+    <h1 class="hero-slogan">以花为集<br>以客为心</h1>
+    <p class="muted">{{ welcome.home_title }}</p>
+    <div class="hero-actions">
+      <a class="btn" href="{% url 'products:list' %}">去选花</a>
+      {% if not user.is_authenticated %}
+        <a class="btn btn-outline" href="{% url 'accounts:register' %}">成为会员</a>
+      {% endif %}
+    </div>
+  </div>
+  <div class="hero-photo">
+    {% if hero_product and hero_product.image %}
+      <img src="{{ hero_product.image.url }}" alt="{{ hero_product.name }}" decoding="async" width="720" height="900">
+    {% else %}
+      <img src="{% static 'img/hero.jpg' %}" alt="花间集" decoding="async" width="720" height="900">
+    {% endif %}
+  </div>
+</section>
+
+{% if categories %}
+  <div class="cat-grid">
+    {% for c in categories %}
+      <a class="cat-tile" href="{% url 'products:list' %}?cat={{ c.slug }}">
+        <div class="cat-photo">
+          {% if c.cover and c.cover.image %}
+            <img src="{{ c.cover.image.url }}" alt="{{ c.name }}" loading="lazy" decoding="async" width="480" height="320">
+          {% endif %}
+        </div>
+        <h3>{{ c.name }}</h3>
+      </a>
+    {% endfor %}
+  </div>
+{% endif %}
+
+{% if products %}
+  <section class="home-products">
+    <header class="section-head">
+      <h2>在售</h2>
+      <a href="{% url 'products:list' %}">花市</a>
+    </header>
+    <div class="product-grid">
+      {% for p in products %}
+        {% include "products/_card.html" with product=p show_actions=False %}
+      {% endfor %}
+    </div>
+  </section>
+{% else %}
+  <div class="empty">暂无商品。<a href="{% url 'products:list' %}">去花市</a></div>
+{% endif %}
+
+{% if user.is_authenticated and user.role == "member" and member_profile %}
+  <section class="member-strip">
+    <a class="card" href="{% url 'members:ledger' %}">
+      <p class="muted">积分</p>
+      <strong>{{ member_profile.current_points }}</strong>
+    </a>
+    <a class="card" href="{% url 'members:ledger' %}">
+      <p class="muted">储值</p>
+      <strong>¥{{ member_profile.store_balance }}</strong>
+    </a>
+    <a class="card" href="{% url 'members:coupons' %}">
+      <p class="muted">优惠券</p>
+      <strong>领取</strong>
+    </a>
+    <a class="card" href="{% url 'orders:list' %}">
+      <p class="muted">订单</p>
+      <strong>查看</strong>
+    </a>
+  </section>
+{% elif not user.is_authenticated %}
+  <section class="guest-strip card">
+    <p class="muted">注册即有积分与储值账户</p>
+    <a class="btn btn-outline" href="{% url 'accounts:register' %}">成为会员</a>
+  </section>
+{% endif %}
+{% endblock %}

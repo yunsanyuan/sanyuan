@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}会员资料 · 花间集{% endblock %}
+{% block content %}
+<header class="shop-head">
+  <div>
+    <h1>会员资料</h1>
+    <p class="muted">账号 {{ user.username }} 不可改，其余可自行更新。</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-ghost" href="{% url 'accounts:password_change' %}">修改密码</a>
+    <a class="btn btn-ghost" href="{% url 'members:center' %}">返回会员中心</a>
+  </div>
+</header>
+<section class="card profile-card">
+  <form method="post">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {% for field in form %}
+      <label>{{ field.label }}{{ field }}{{ field.errors }}</label>
+    {% endfor %}
+    <button class="btn" type="submit">保存</button>
+  </form>
+</section>
+{% endblock %}

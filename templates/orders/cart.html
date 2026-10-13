@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}购物车 · 花间集{% endblock %}
+{% block content %}
+<h1>购物车</h1>
+{% if items %}
+<div class="table-wrap">
+<table class="table">
+  <thead><tr><th>商品</th><th>单价</th><th>数量</th><th>小计</th></tr></thead>
+  <tbody>
+  {% for item in items %}
+    <tr>
+      <td>
+        <div class="cart-item">
+          <div class="thumb">{% if item.product.image %}<img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" loading="lazy" decoding="async">{% else %}<span>花</span>{% endif %}</div>
+          <a href="{% url 'products:detail' item.product.pk %}">{{ item.product.name }}</a>
+        </div>
+      </td>
+      <td>¥{{ item.product.price }}</td>
+      <td>
+        <form class="inline" method="post" action="{% url 'orders:cart_update' item.pk %}">
+          {% csrf_token %}
+          <input type="number" name="quantity" min="0" value="{{ item.quantity }}">
+          <button class="btn btn-outline" type="submit">更新</button>
+        </form>
+      </td>
+      <td class="price">¥{{ item.subtotal }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+<div class="summary-bar card">
+
+  <div>
+    <p class="muted">商品合计 ¥{{ goods }} · 预估等级折扣 −¥{{ discount }}</p>
+    <p>应付约 <strong class="price">¥{{ payable }}</strong></p>
+  </div>
+  <a class="btn" href="{% url 'orders:checkout' %}">去结算</a>
+</div>
+{% else %}
+<div class="empty muted">购物车是空的。<a href="{% url 'products:list' %}">去选花</a></div>
+{% endif %}
+{% endblock %}

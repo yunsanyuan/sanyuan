@@ -1,0 +1,39 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<h1>{{ title }}</h1>
+<p>将发放以下优惠券（受每人限领、库存与有效期约束）：</p>
+<ul>
+  {% for c in coupons %}
+    <li>{{ c.name }}（{{ c.code }}）· 剩余 {{ c.remaining }} 张</li>
+  {% endfor %}
+</ul>
+<form method="post">
+  {% csrf_token %}
+  {% for c in coupons %}
+    <input type="hidden" name="_selected_action" value="{{ c.pk }}">
+  {% endfor %}
+  <input type="hidden" name="action" value="{{ action_name }}">
+  <input type="hidden" name="index" value="0">
+  <input type="hidden" name="post" value="yes">
+  <div class="card" style="padding:16px;margin:16px 0">
+    <p><label><input type="checkbox" id="toggle-all"> 全选会员</label></p>
+    {% for m in members %}
+      <label style="display:block;margin:6px 0">
+        <input type="checkbox" name="member_ids" value="{{ m.pk }}">
+        {{ m }}（{{ m.user.username }} · {{ m.level }}）
+      </label>
+    {% empty %}
+      <p>暂无会员</p>
+    {% endfor %}
+  </div>
+  <button type="submit" class="btn btn-success">确认发放</button>
+  <a class="btn btn-outline-secondary" href="../">返回</a>
+</form>
+<script>
+  document.getElementById("toggle-all")?.addEventListener("change", function () {
+    document.querySelectorAll("input[name=member_ids]").forEach(function (box) {
+      box.checked = this.checked;
+    }, this);
+  });
+</script>
+{% endblock %}
